@@ -36,9 +36,6 @@ function updateStash() {
         <div class="stash-item ${state.collectorItems.includes(item) ? 'found' : ''}" onclick="toggleItem('${item.replace(/'/g, "\\'")}')">
             <img src="./assets/items/${formatName(item)}.png" title="${item}" onerror="this.src='https://via.placeholder.com/40/222'">
         </div>`).join('');
-    const percent = Math.round((state.collectorItems.length / collectorItemsList.length) * 100);
-    document.getElementById('k-bar').style.width = percent + '%';
-    document.getElementById('k-stats').innerText = `${state.collectorItems.length}/${collectorItemsList.length}`;
 }
 
 function render() {
@@ -56,11 +53,21 @@ function render() {
         return matchTrader && matchSearch;
     });
 
+    // CORRECTED HEADERS: Kappa Bar now looks at Quest counts
     const total = data.length, done = state.completedQuests.length;
-    const kappa = data.filter(q => q.kappaRequired), kDone = kappa.filter(q => state.completedQuests.includes(q.id)).length;
-    const lk = data.filter(q => q.lightkeeperRequired), lkDone = lk.filter(q => state.completedQuests.includes(q.id)).length;
-    document.getElementById('q-bar').style.width = (done / (total || 1) * 100) + '%'; document.getElementById('q-stats').innerText = `${done}/${total}`;
-    document.getElementById('lk-bar').style.width = (lkDone / (lk.length || 1) * 100) + '%'; document.getElementById('lk-stats').innerText = `${lkDone}/${lk.length}`;
+    const kappaQuests = data.filter(q => q.kappaRequired);
+    const kappaDone = kappaQuests.filter(q => state.completedQuests.includes(q.id)).length;
+    const lkQuests = data.filter(q => q.lightkeeperRequired);
+    const lkDone = lkQuests.filter(q => state.completedQuests.includes(q.id)).length;
+
+    document.getElementById('q-bar').style.width = (done / (total || 1) * 100) + '%'; 
+    document.getElementById('q-stats').innerText = `${done}/${total}`;
+    
+    document.getElementById('k-bar').style.width = (kappaDone / (kappaQuests.length || 1) * 100) + '%';
+    document.getElementById('k-stats').innerText = `${kappaDone}/${kappaQuests.length}`;
+
+    document.getElementById('lk-bar').style.width = (lkDone / (lkQuests.length || 1) * 100) + '%';
+    document.getElementById('lk-stats').innerText = `${lkDone}/${lkQuests.length}`;
 
     filtered.forEach(q => {
         const isDone = state.completedQuests.includes(q.id);
@@ -83,19 +90,16 @@ function render() {
             </div>
             <div class="card-details">
                 <div class="section-title">Objectives</div>
-                ${(q.objectives || []).map(o => `<div class="obj-item">${o.description} ${o.count ? `(${o.count})` : ''}</div>`).join('')}
+                ${(q.objectives || []).map(o => `<div class="obj-item">${o.description}</div>`).join('')}
                 <div class="section-title">Rewards</div>
                 <div style="color:#888;">EXP: ${q.experience}</div>
-                <div style="color:#888;">Standing: ${(q.finishRewards?.traderStanding || []).map(s => `${s.trader.name} +${s.standing}`).join(', ') || 'None'}</div>
                 <a href="${q.wikiLink}" target="_blank" class="wiki-link">Wiki Page</a>
             </div>`;
         list.appendChild(card);
     });
     
-    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
     const btnIdMap = { 'hideCompleted': 'f-hide', 'kappaRem': 'f-kappaRem', 'lkRem': 'f-lkRem', 'showAll': 'f-all' };
-    const activeBtn = document.getElementById(btnIdMap[currentStateFilter]);
-    if (activeBtn) activeBtn.classList.add('active');
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.toggle('active', btn.id === btnIdMap[currentStateFilter]));
 }
 
 window.toggleDetails = (e, id) => { e.stopPropagation(); openCardId = openCardId === id ? null : id; render(); };

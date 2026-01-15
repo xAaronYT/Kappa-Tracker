@@ -2,34 +2,28 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
+const savePath = path.join(app.getPath('userData'), 'save-state.json');
+
 function createWindow() {
     const win = new BrowserWindow({
-        width: 1650, 
-        height: 950,
-        autoHideMenuBar: true,
+        width: 1400, height: 900,
         backgroundColor: '#050505',
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
-            webSecurity: false 
+            nodeIntegration: false
         }
     });
     win.loadFile('index.html');
 }
 
-// Handles saving progress to progress.json
-ipcMain.handle('save-data', async (e, d) => { 
-    fs.writeFileSync(path.join(__dirname, 'progress.json'), JSON.stringify(d)); 
+ipcMain.handle('save-data', async (event, state) => {
+    fs.writeFileSync(savePath, JSON.stringify(state, null, 2));
 });
 
-// Handles loading progress from progress.json
 ipcMain.handle('load-data', async () => {
-    const p = path.join(__dirname, 'progress.json');
-    return fs.existsSync(p) ? JSON.parse(fs.readFileSync(p)) : { completedQuests: [], collectorItems: [] };
+    if (fs.existsSync(savePath)) return JSON.parse(fs.readFileSync(savePath, 'utf8'));
+    return null;
 });
 
 app.whenReady().then(createWindow);
-
-app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') app.quit();
-});
