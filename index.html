@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        :root { --accent: #9a8866; --bg: #050505; --sidebar: #0a0a0a; --card: #111; --border: #222; --kappa-orange: #e67e22; --lk-blue: #00d4ff; --text-dim: #888; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        #left-bar { width: 220px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+        .all-btn { padding: 20px; background: #1a1a1a; color: var(--accent); border: none; cursor: pointer; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid var(--accent); }
+        .trader-card { padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; opacity: 0.4; display: flex; align-items: center; gap: 10px; filter: grayscale(1); transition: 0.2s; }
+        .trader-card.active { opacity: 1; filter: grayscale(0); border-left: 4px solid var(--accent); background: #151515; }
+        .trader-img { width: 40px; height: 40px; border: 1px solid #333; }
+        #center { flex: 1; display: flex; flex-direction: column; border-right: 1px solid var(--border); }
+        header { padding: 10px 30px; background: #000; border-bottom: 1px solid var(--border); }
+        .header-row { display: grid; grid-template-columns: 1fr 200px 120px; align-items: center; gap: 20px; margin-bottom: 5px; }
+        .p-title { font-size: 0.8rem; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; color: #fff; }
+        .bar-container { width: 100%; height: 6px; background: #222; position: relative; }
+        .bar-fill { height: 100%; background: var(--accent); transition: 0.5s; width: 0%; }
+        #k-bar { background: var(--kappa-orange); }
+        #lk-bar { background: var(--lk-blue); }
+        .stat-text { font-size: 0.8rem; color: #aaa; font-family: 'Consolas', monospace; text-align: right; }
+        .controls-container { padding: 10px 30px; background: #080808; border-bottom: 1px solid var(--border); display: flex; gap: 15px; }
+        #search-input { flex-grow: 1; background: #111; border: 1px solid var(--border); color: #fff; padding: 8px; outline: none; }
+        .filter-group { display: flex; background: #111; border: 1px solid var(--border); padding: 2px; }
+        .filter-btn { background: transparent; border: none; color: #555; padding: 5px 10px; cursor: pointer; font-size: 0.6rem; font-weight: bold; }
+        .filter-btn.active { color: var(--accent); background: #1a1a1a; }
+        #main-scroll { padding: 20px; overflow-y: auto; flex-grow: 1; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; align-items: start; }
+        .card { background: var(--card); border: 1px solid var(--border); position: relative; display: flex; flex-direction: column; transition: 0.2s; }
+        .card.done { opacity: 0.4; background: #0d1105; border-color: #4e5e1e; }
+        .card-main { padding: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; flex-grow: 1; }
+        .card-info { flex-grow: 1; }
+        .card-title { font-size: 0.85rem; font-weight: bold; color: #dbd2b1; display: block; margin-bottom: 2px; }
+        .trader-sub { font-size: 0.6rem; color: #555; text-transform: uppercase; }
+        
+        /* Dropdown Button Area */
+        .drop-btn { width: 40px; display: flex; align-items: center; justify-content: center; background: #1a1a1a; border-left: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
+        .drop-btn:hover { background: #222; }
+        
+        /* Pure CSS Arrow (No Text) */
+        .arrow-icon { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid var(--accent); transition: transform 0.3s ease; }
+        
+        .card-details { display: none; padding: 15px; background: #0d0d0d; border-top: 1px solid var(--border); font-size: 0.75rem; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; }
+        .card.open .card-details { display: block; }
+        .card.open .arrow-icon { transform: rotate(180deg); border-top-color: #fff; }
+        .card.open .drop-btn { background: var(--accent); }
+        .card.open .arrow-icon { border-top-color: #000; }
+
+        .tag { font-size: 0.5rem; padding: 2px 4px; border-radius: 2px; font-weight: bold; margin-left: 5px; vertical-align: middle; }
+        .kappa-tag { border: 1px solid var(--kappa-orange); color: var(--kappa-orange); }
+        .lk-tag { border: 1px solid var(--lk-blue); color: var(--lk-blue); }
+        .section-title { color: var(--accent); text-transform: uppercase; font-size: 0.6rem; margin-bottom: 5px; margin-top: 10px; border-bottom: 1px solid #222; padding-bottom: 2px; }
+        .obj-item { color: #ccc; margin-bottom: 4px; border-left: 2px solid #333; padding-left: 8px; line-height: 1.2; }
+        .wiki-link { display: inline-block; margin-top: 10px; color: var(--accent); text-decoration: none; font-weight: bold; font-size: 0.7rem; border: 1px solid var(--accent); padding: 3px 8px; }
+        .wiki-link:hover { background: var(--accent); color: #000; }
+        #right-bar { width: 340px; background: var(--sidebar); display: flex; flex-direction: column; }
+        .stash-head { padding: 15px; font-size: 0.75rem; color: var(--accent); font-weight: bold; border-bottom: 1px solid var(--border); text-align: center; }
+        .stash-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 15px; overflow-y: auto; }
+        .stash-item { aspect-ratio: 1 / 1; background: #0d0d0d; border: 1px solid #1a1a1a; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .stash-item img { width: 85%; height: 85%; object-fit: contain; opacity: 0.15; filter: grayscale(1); }
+        .stash-item.found { border-color: var(--accent); background: #1a150a; }
+        .stash-item.found img { opacity: 1; filter: grayscale(0); }
+        .reset-btn { margin-top: auto; padding: 15px; background: transparent; color: #444; border: none; border-top: 1px solid var(--border); cursor: pointer; font-size: 0.65rem; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #333; }
+    </style>
+</head>
+<body>
+    <div id="left-bar">
+        <button class="all-btn" onclick="setTraderFilter('All')">All Quests</button>
+        <div id="trader-list" style="overflow-y:auto; flex-grow: 1;"></div>
+        <button class="reset-btn" onclick="resetProgress()">Reset All Progress</button>
+    </div>
+    <div id="center">
+        <header>
+            <div class="header-row">
+                <div class="p-title">Overall Quests</div>
+                <div class="bar-container"><div id="q-bar" class="bar-fill"></div></div>
+                <div id="q-stats" class="stat-text">0/0</div>
+            </div>
+            <div class="header-row">
+                <div class="p-title" style="color:var(--kappa-orange)">Kappa Tracker</div>
+                <div class="bar-container"><div id="k-bar" class="bar-fill"></div></div>
+                <div id="k-stats" class="stat-text">0/0</div>
+            </div>
+            <div class="header-row">
+                <div class="p-title" style="color:var(--lk-blue)">Lightkeeper Access</div>
+                <div class="bar-container"><div id="lk-bar" class="bar-fill"></div></div>
+                <div id="lk-stats" class="stat-text">0/0</div>
+            </div>
+        </header>
+        <div class="controls-container">
+            <input type="text" id="search-input" placeholder="Search..." oninput="render()">
+            <div class="filter-group">
+                <button id="f-hide" class="filter-btn active" onclick="setStateFilter('hideCompleted')">Hide Done</button>
+                <button id="f-kappaRem" class="filter-btn" onclick="setStateFilter('kappaRem')">Kappa Rem.</button>
+                <button id="f-lkRem" class="filter-btn" onclick="setStateFilter('lkRem')">LK Rem.</button>
+                <button id="f-all" class="filter-btn" onclick="setStateFilter('showAll')">Show All</button>
+            </div>
+        </div>
+        <div id="main-scroll"><div id="list" class="grid"></div></div>
+    </div>
+    <div id="right-bar">
+        <div class="stash-head">COLLECTOR STASH</div>
+        <div id="stash-list" class="stash-grid"></div>
+    </div>
+    <script src="renderer.js"></script>
+</body>
+</html>

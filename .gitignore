@@ -1,0 +1,7 @@
+node_modules/
+.vs/
+out/
+bin/
+obj/
+*.exe
+.DS_Store
